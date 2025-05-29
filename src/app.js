@@ -39,18 +39,32 @@ app.use(
   }
 );
 
-app.use(
-  "/multi-handlers-second",
+app.use("/multi-handlers-second", [
   (req, res, next) => {
     console.log("response from first handler");
     next();
-    res.send("response from first handler");
+    // res.send("response from first handler");
   },
-  (req, res) => {
+  (req, res, next) => {
     console.log("response from second handler");
     res.send("response from second handler");
-  }
-);
+    console.log("triggered");
+    next();
+  },
+]);
+
+app.use("/multi-handlers-diffrent-ways", (req, res, next) => {
+  console.log("response from first handler");
+  next();
+  // res.send("response from first handler");
+});
+
+app.use("/multi-handlers-diffrent-ways", (req, res, next) => {
+  console.log("response from second handler");
+  res.send("response from second handler");
+  console.log("triggered");
+  next();
+});
 
 app.listen(3000, () => {
   console.log("Server is running on port 3000...");
