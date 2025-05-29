@@ -2,68 +2,22 @@ const express = require("express");
 
 const app = express();
 
-app.get("/user", (req, res) => {
-  res.send({ firstName: "Debraj", lastName: "Basak", type: "GET" });
-});
-
-app.post("/user", (req, res) => {
-  res.send({
-    firstName: "Debraj",
-    lastName: "Basak",
-    type: "POST",
-    query: req.query,
-  });
-});
-
-app.delete("/user", (req, res) => {
-  res.send({ firstName: "Debraj", lastName: "Basak", type: "DELETE" });
-});
-
-app.put("/user", (req, res) => {
-  res.send({ firstName: "Debraj", lastName: "Basak", type: "PUT" });
-});
-
-app.use("/test", (req, res) => {
-  res.send("Hello from the server");
-});
-
-app.use(
-  "/multi-handlers",
-  (req, res) => {
-    console.log("response from first handler");
-    res.send("response from first handler");
-  },
-  (req, res) => {
-    console.log("response from second handler");
-    res.send("response from second handler");
+app.use("/admin", (req, res, next) => {
+  const token = "XYZx";
+  if (token !== "XYZ") {
+    res.status(401).json({ message: "Authentication failed" });
+  } else {
+    console.log("Authentication passed");
+    next();
   }
-);
-
-app.use("/multi-handlers-second", [
-  (req, res, next) => {
-    console.log("response from first handler");
-    next();
-    // res.send("response from first handler");
-  },
-  (req, res, next) => {
-    console.log("response from second handler");
-    res.send("response from second handler");
-    console.log("triggered");
-    next();
-  },
-]);
-
-app.use("/multi-handlers-diffrent-ways", (req, res, next) => {
-  console.log("response from first handler");
-  next();
-  // res.send("response from first handler");
 });
 
-app.use("/multi-handlers-diffrent-ways", (req, res, next) => {
-  console.log("response from second handler");
-  res.send("response from second handler");
-  console.log("triggered");
-  next();
+app.get("/admin/getAllItems", (req, res) => {
+  res.status(200).json({ message: "All items generated" });
+});
+
+app.delete("/admin/deleteAllItems", (req, res) => {
+  res.status(200).json({ message: "All items deleted" });
 });
 
 app.listen(3000, () => {
