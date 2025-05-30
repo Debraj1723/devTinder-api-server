@@ -2,15 +2,9 @@ const express = require("express");
 
 const app = express();
 
-app.use("/admin", (req, res, next) => {
-  const token = "XYZx";
-  if (token !== "XYZ") {
-    res.status(401).json({ message: "Authentication failed" });
-  } else {
-    console.log("Authentication passed");
-    next();
-  }
-});
+const { adminAuth } = require("./middlewares/auth.js");
+
+app.use("/admin", adminAuth);
 
 app.get("/admin/getAllItems", (req, res) => {
   res.status(200).json({ message: "All items generated" });
