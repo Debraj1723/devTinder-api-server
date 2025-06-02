@@ -2,8 +2,6 @@ const express = require("express");
 
 const app = express();
 
-
-
 //// all http calls
 
 app.get("/user", (req, res) => {
@@ -30,9 +28,6 @@ app.put("/user", (req, res) => {
 app.use("/test", (req, res) => {
   res.send("Hello from the server");
 });
-
-
-
 
 ///  multi handlers
 
@@ -62,7 +57,6 @@ app.use("/multi-handlers-second", [
   },
 ]);
 
-
 ///  more on multi handlers
 
 app.use("/multi-handlers-diffrent-ways", (req, res, next) => {
@@ -80,4 +74,41 @@ app.use("/multi-handlers-diffrent-ways", (req, res, next) => {
 
 app.listen(3000, () => {
   console.log("Server is running on port 3000...");
+});
+
+//////////////// middlewares explained
+
+const { adminAuth, userAuth } = require("./middlewares/auth.js");
+
+app.use("/admin", adminAuth);
+
+app.get("/admin/getAllItems", (req, res) => {
+  res.status(200).json({ message: "All items generated" });
+});
+
+app.delete("/admin/deleteAllItems", (req, res) => {
+  res.status(200).json({ message: "All items deleted" });
+});
+
+/////////////////////// Handling errors
+
+// first way of handling error
+app.get("/getUserSummary", (req, res) => {
+  throw new error("Something went wrong");
+});
+
+app.use("/", (err, req, res, next) => {
+  if (err) {
+    res.status(500).send(err);
+  }
+});
+
+// second way of handling error
+app.get("/getUserSummary", (req, res) => {
+  try {
+    throw new Error("Something went wrong pls try again");
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: err.message });
+  }
 });
