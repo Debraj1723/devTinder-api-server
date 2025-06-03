@@ -4,16 +4,13 @@ const User = require("./models/user.js");
 
 const app = express();
 
+//processes json
+app.use(express.json());
+
 app.post("/signup", async (req, res) => {
   try {
-    const user = new User({
-      firstName: "Manohar",
-      lastName: "Dalal",
-      age: 45,
-      gender: "Male",
-      email: "debraj.basak663@gmail.com",
-      password: "Debraj1234",
-    });
+    // we are not creating .create method now but this is equivalent to it as we are creating an instance before saving it 
+    const user = new User(req.body);
     await user.save();
     res.status(200).json({ message: "User saved successfully" });
   } catch (err) {
