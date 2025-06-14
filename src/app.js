@@ -1,6 +1,9 @@
 const express = require("express");
 const connectDB = require("./config/database.js");
 const User = require("./models/user.js");
+const { validateUserAddition } = require("./utils/validations.js");
+const bcrypt = require("bcrypt");
+const validator = require("validator");
 
 const app = express();
 
@@ -9,12 +12,37 @@ app.use(express.json());
 
 app.post("/signup", async (req, res) => {
   try {
-    // we are not creating .create method now but this is equivalent to it as we are creating an instance before saving it
-    const user = new User(req.body);
+    validateUserAddition(req);
+    let { password, firstName, lastName, age, gender, email } = req.body;
+    let encryptedPassword = await bcrypt.hash(password, 10);
+    const user = new User({
+      password: encryptedPassword,
+      firstName: firstName,
+      lastName: lastName,
+      age: age,
+      gender: gender,
+      email: email,
+    });
     await user.save();
     res.status(200).json({ message: "User saved successfully" });
   } catch (err) {
     res.status(400).send({ message: err.message });
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    console.log({ email, password });
+    if (!validator.isEmail(email)) throw new Error("Invalid email id given");
+    const user = await User.findOne({ email: email });
+    console.log(user)
+    if (!user) throw new Error("Invalid credentials");
+    let isValidPassword = await bcrypt.compare(password, user.password);
+    if (isValidPassword) res.status(200).send("Login successful!");
+    else throw new Error("Invalid credentials");
+  } catch (e) {
+    res.status(404).send(e.message);
   }
 });
 
@@ -30,7 +58,6 @@ app.get("/user", async (req, res) => {
 
 app.delete("/user", async (req, res) => {
   try {
-    console.log("asdasd");
     const userID = req.body.user;
     await User.findByIdAndDelete(userID);
     res.status(200).send("User deleted successfully.");
