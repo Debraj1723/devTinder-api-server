@@ -4,11 +4,13 @@ const User = require("./models/user.js");
 const { validateUserAddition } = require("./utils/validations.js");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 
 //processes json
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
@@ -33,14 +35,16 @@ app.post("/signup", async (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log({ email, password });
     if (!validator.isEmail(email)) throw new Error("Invalid email id given");
     const user = await User.findOne({ email: email });
-    console.log(user)
     if (!user) throw new Error("Invalid credentials");
     let isValidPassword = await bcrypt.compare(password, user.password);
-    if (isValidPassword) res.status(200).send("Login successful!");
-    else throw new Error("Invalid credentials");
+    if (isValidPassword) {
+      res.cookie("token", "123jb1k2j3bk12j3k123k1h");
+      res.status(200).send("Login successful!");
+    } else {
+      throw new Error("Invalid credentials");
+    }
   } catch (e) {
     res.status(404).send(e.message);
   }
@@ -48,6 +52,7 @@ app.post("/login", async (req, res) => {
 
 app.get("/user", async (req, res) => {
   try {
+    console.log(req.cookies);
     const userEmail = req.body.email;
     const userDetails = await User.find({ email: userEmail });
     res.status(200).send(userDetails);
