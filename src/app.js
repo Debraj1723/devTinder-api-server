@@ -5,6 +5,7 @@ const { validateUserAddition } = require("./utils/validations.js");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 
@@ -40,7 +41,9 @@ app.post("/login", async (req, res) => {
     if (!user) throw new Error("Invalid credentials");
     let isValidPassword = await bcrypt.compare(password, user.password);
     if (isValidPassword) {
-      res.cookie("token", "123jb1k2j3bk12j3k123k1h");
+      // res.cookie("token", "123jb1k2j3bk12j3k123k1h");
+      const token = await jwt.sign({ _id: user._id }, process.env.SECRET_KEY);
+      res.cookie("token", token);
       res.status(200).send("Login successful!");
     } else {
       throw new Error("Invalid credentials");
@@ -52,9 +55,21 @@ app.post("/login", async (req, res) => {
 
 app.get("/user", async (req, res) => {
   try {
-    console.log(req.cookies);
     const userEmail = req.body.email;
     const userDetails = await User.find({ email: userEmail });
+    res.status(200).send(userDetails);
+  } catch (e) {
+    res.status(404).send("Something went wrong");
+  }
+});
+
+app.get("/profile", async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    const isTokenValidated = await jwt.verify(token, process.env.SECRET_KEY);
+    if (!isTokenValidated) throw new Error("Invalid Authentication");
+    const { _id } = isTokenValidated;
+    const userDetails = await User.find({ _id: _id });
     res.status(200).send(userDetails);
   } catch (e) {
     res.status(404).send("Something went wrong");
