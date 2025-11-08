@@ -3,11 +3,11 @@ const express = require("express");
 const authRouter = express.Router();
 
 const User = require("../models/user.js");
+const Code = require("../models/code.js");
+
 const { validateUserAddition } = require("../utils/validations.js");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
-
-
 
 authRouter.post("/signup", async (req, res) => {
   try {
@@ -54,5 +54,99 @@ authRouter.post("/login", async (req, res) => {
     res.status(404).send(e.message);
   }
 });
+
+authRouter.post("/logout", async (req, res) => {
+  try {
+    res.clearCookie("token");
+    res.status(200).send("Logout successful!");
+  } catch (e) {
+    res.status(404).send(e.message);
+  }
+});
+
+authRouter.get("/generate-otp", async (req, res) => {
+  try {
+    console.log(req.body);
+    const { email } = req.body;
+    const userExists = await User.findOne({ email: email });
+
+    if (!userExists) {
+      return res.status(400).send("User with this email ID does not exist.");
+    }
+
+    const generateOtp = () => {
+      let otp = "";
+      let i = 4;
+      while (i > 0) {
+        otp += Math.floor(Math.random() * 10);
+        i--;
+      }
+      return otp;
+    };
+
+    let codeData = await Code.findOne({ email: email });
+
+    let otp = "";
+
+    if (codeData && isValidOtp(codeData.createdAt)) {
+      otp = codeData.otp;
+    } else {
+      otp = generateOtp();
+      console.log({
+        otp:otp,
+        email:email,
+      })
+
+      await Code.create({
+        otp:otp,
+        email:email,
+      });
+    }
+
+    //actually should send otp to the given email;
+    res.status(200).send(`Your otp is - ${otp}`);
+  } catch (e) {
+    res.status(400).send(e.message);
+  }
+});
+
+authRouter.patch("/reset-password", async (req, res) => {
+  try {
+    const { email, newPassword, otp } = req.body;
+
+    const user = await User.findOne({ email: email });
+
+    if (!user) {
+      return res.status(400).send("User with this email ID does not exist.");
+    }
+
+    let codeData = await Code.findOne({ email: email }).sort({createdAt:-1});
+
+    if (!codeData || codeData.otp !== otp || !isValidOtp(codeData.createdAt)) {
+      return res.status(400).send("Invalid otp");
+    }
+
+    let encryptedPassword = await bcrypt.hash(newPassword, 10);
+
+    await User.findOneAndUpdate(
+      { email: email },
+      { $set: { password: encryptedPassword } }
+    );
+
+    res.status(200).send(`Your password has been reset`);
+  } catch (e) {
+    res.status(400).send(e.message);
+  }
+});
+
+function isValidOtp(time) {
+  const currentTime = new Date();
+  const givenTime = new Date(time);
+
+  const diffInMs = currentTime - givenTime;
+
+  const diffInMinutes = diffInMs / (1000 * 60);
+  return diffInMinutes < 1;
+}
 
 module.exports = { authRouter };

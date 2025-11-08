@@ -4,12 +4,28 @@ const profileRouter = express.Router();
 
 const { authValidator } = require("../middlewares/auth.js");
 
+const { validateUserProfileEdit } = require("../utils/validations.js");
+
+const User = require("../models/user.js");
 
 profileRouter.get("/profile", authValidator, async (req, res) => {
   try {
     res.status(200).send(req.user);
   } catch (e) {
     res.status(404).send("Something went wrong");
+  }
+});
+
+profileRouter.patch("/profile/edit", authValidator, async (req, res) => {
+  try {
+    if (!validateUserProfileEdit(req))
+      return res.status(400).send({ message: "Invalid data provided." });
+
+    await User.findByIdAndUpdate(req.user._id, { $set: req.body });
+
+    res.status(200).json({ message: "User profile updated successfully" });
+  } catch (err) {
+    res.status(400).send({ message: err.message });
   }
 });
 

@@ -11,4 +11,22 @@ const validateUserAddition = (req) => {
   }
 };
 
-module.exports = { validateUserAddition };
+const validateUserProfileEdit = (req) => {
+  const acceptableFields = [
+    "firstName",
+    "lastName",
+    "email",
+    "age",
+    "gender",
+    "photoUrl",
+    "about",
+    "skills"
+  ];
+  const isEditAllowed = Object.keys(req.body).every((field) =>{
+    return acceptableFields.includes(field);
+  })
+  return isEditAllowed;
+};
+
+
+module.exports = { validateUserAddition,validateUserProfileEdit };
