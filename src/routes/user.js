@@ -53,8 +53,9 @@ userRouter.get(
 );
 
 userRouter.get("/feed", authValidator, async (req, res) => {
+  console.log("Feed route accessed");
   try {
-    let page = parseInt(req.query.page) || 0;
+    let page = parseInt(req.query.page) || 1;
 
     let limit = parseInt(req.query.limit) || 10;
 
@@ -84,3 +85,5 @@ userRouter.get("/feed", authValidator, async (req, res) => {
     res.status(404).send({ message: e.message });
   }
 });
+
+module.exports = { userRouter };

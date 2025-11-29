@@ -24,7 +24,7 @@ const userAuth = (req, res, next) => {
 const authValidator = async (req, res, next) => {
   try {
     const { token } = req.cookies;
-    if (!token) return res.status(404).json({ message: "Token not found" });
+    if (!token) return res.status(401).send("Please Login!");
     const decodedObj = await jwt.verify(token, process.env.SECRET_KEY);
     const { _id } = decodedObj;
     const user = await User.findOne({ _id: _id });

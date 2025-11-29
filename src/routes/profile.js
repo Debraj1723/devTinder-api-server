@@ -21,9 +21,15 @@ profileRouter.patch("/profile/edit", authValidator, async (req, res) => {
     if (!validateUserProfileEdit(req))
       return res.status(400).send({ message: "Invalid data provided." });
 
-    await User.findByIdAndUpdate(req.user._id, { $set: req.body });
+    const data = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: req.body },
+      { new: true }
+    );
 
-    res.status(200).json({ message: "User profile updated successfully" });
+    res
+      .status(200)
+      .json({ message: "User profile updated successfully", data });
   } catch (err) {
     res.status(400).send({ message: err.message });
   }
