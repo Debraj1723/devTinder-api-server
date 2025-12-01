@@ -12,25 +12,29 @@ const validator = require("validator");
 authRouter.post("/signup", async (req, res) => {
   try {
     validateUserAddition(req);
-    let { password, firstName, lastName, age, gender, email } = req.body;
+    let { password, firstName, lastName, email } = req.body;
     const userExists = await User.findOne({ email: email });
     if (userExists) {
-      res.status(400).send({ message: "User already exists." });
-      return;
+      return res.status(400).send({ message: "User already exists." });
     }
     let encryptedPassword = await bcrypt.hash(password, 10);
     const user = new User({
       password: encryptedPassword,
       firstName: firstName,
       lastName: lastName,
-      age: age,
-      gender: gender,
       email: email,
     });
-    await user.save();
-    res.status(200).json({ message: "User saved successfully" });
+
+    const savedUser = await user.save();
+
+    const token = await savedUser.getToken();
+
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 60000),
+    });
+    res.status(200).send(savedUser);
   } catch (err) {
-    res.status(400).send({ message: err.message });
+    res.status(400).send(err.message);
   }
 });
 
@@ -93,13 +97,13 @@ authRouter.get("/generate-otp", async (req, res) => {
     } else {
       otp = generateOtp();
       console.log({
-        otp:otp,
-        email:email,
-      })
+        otp: otp,
+        email: email,
+      });
 
       await Code.create({
-        otp:otp,
-        email:email,
+        otp: otp,
+        email: email,
       });
     }
 
@@ -120,7 +124,7 @@ authRouter.patch("/reset-password", async (req, res) => {
       return res.status(400).send("User with this email ID does not exist.");
     }
 
-    let codeData = await Code.findOne({ email: email }).sort({createdAt:-1});
+    let codeData = await Code.findOne({ email: email }).sort({ createdAt: -1 });
 
     if (!codeData || codeData.otp !== otp || !isValidOtp(codeData.createdAt)) {
       return res.status(400).send("Invalid otp");
