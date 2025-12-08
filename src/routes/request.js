@@ -7,6 +7,8 @@ const ConnectionRequest = require("../models/connectionRequest.js");
 const { authValidator } = require("../middlewares/auth.js");
 const User = require("../models/user.js");
 
+const { sendEmail } = require("../utils/sendEmail.js");
+
 requestRouter.post(
   "/request/send/:status/:id",
   authValidator,
@@ -19,7 +21,9 @@ requestRouter.post(
       const acceptedStatus = ["Ignored", "Interested"];
 
       const fromUserID = req.user._id;
+
       const toUserID = req.params.id;
+      
       const status = req.params.status;
 
       if (!acceptedStatus.includes(status)) {
@@ -49,6 +53,16 @@ requestRouter.post(
         status,
       });
 
+      // if (req.params.status === "Interested") {
+      //   const emailTemplate = `<h1>${toUserExistance.firstName} sent you a connection request.</h1>`;
+      //   const mail = await sendEmail(
+      //     ["debraj.basak23@gmail.com"],
+      //     "New Connection request received",
+      //     emailTemplate
+      //   );
+      //   console.log(mail);
+      // }
+
       res.status(200).send("Connection sent successfully");
     } catch (e) {
       console.log(e);
@@ -71,7 +85,7 @@ requestRouter.post(
       const requestInfo = await ConnectionRequest.findOne({
         _id: req.params.requestID,
         status: "Interested",
-        toUserID:req.user._id
+        toUserID: req.user._id,
       });
 
       if (!requestInfo) res.status(400).send("Request doesnt exisit.");

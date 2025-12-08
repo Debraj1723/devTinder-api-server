@@ -6,6 +6,8 @@ const cors = require("cors");
 
 const app = express();
 
+const cron = require("./utils/cronjobs.js")
+
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -34,4 +36,4 @@ connectDB()
       console.log("Server is running on port 9000...");
     });
   })
-  .catch(() => console.error("Database connection failed."));
+  .catch((e) => console.error("Database connection failed.",e));
