@@ -5,8 +5,8 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
 const app = express();
-
-const cron = require("./utils/cronjobs.js")
+const cron = require("./utils/cronjobs.js");
+const initializeSocket = require("./utils/socket.js");
 
 app.use(
   cors({
@@ -24,6 +24,12 @@ const { profileRouter } = require("./routes/profile.js");
 const { requestRouter } = require("./routes/request.js");
 const { userRouter } = require("./routes/user.js");
 
+const http = require("http");
+
+const server = http.createServer(app);
+
+initializeSocket(server);
+
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
@@ -32,8 +38,8 @@ app.use("/", userRouter);
 connectDB()
   .then(() => {
     console.log("Database connection established ...");
-    app.listen(9000, () => {
+    server.listen(9000, () => {
       console.log("Server is running on port 9000...");
     });
   })
-  .catch((e) => console.error("Database connection failed.",e));
+  .catch((e) => console.error("Database connection failed.", e));
