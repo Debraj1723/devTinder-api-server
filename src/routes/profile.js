@@ -16,6 +16,15 @@ profileRouter.get("/profile", authValidator, async (req, res) => {
   }
 });
 
+profileRouter.get("/profile-details/:id", authValidator, async (req, res) => {
+  try {
+    const profle = await User.findOne({_id:req.params.id});
+    res.status(200).send(profle);
+  } catch (e) {
+    res.status(404).send("Something went wrong");
+  }
+});
+
 profileRouter.patch("/profile/edit", authValidator, async (req, res) => {
   try {
     if (!validateUserProfileEdit(req))
