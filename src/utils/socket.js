@@ -9,34 +9,55 @@ const initializeSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    socket.on("joinChat", ({ receiver, sender }) => {
-      const roomID = [receiver, sender].sort().join("$");
-      console.log("joining room :" + roomID);
+    socket.on("joinChat", ({ participants }) => {
+      const roomID = [...participants].sort().join("$");
       socket.join(roomID);
     });
 
-    socket.on("sendMessage", async ({ receiver, sender, text }) => {
-      const roomID = [receiver, sender].sort().join("$");
-      io.to(roomID).emit("messageReceived", { receiver, sender, text });
+    socket.on("sendMessage", async ({ participants, sender, text }) => {
+      const roomID = [...participants].sort().join("$");
+      io.to(roomID).emit("messageReceived", { sender, text });
 
       try {
         let chat = await Chat.findOne({
-          participants: { $all: [receiver, sender] },
+          participants: { $all: participants },
         });
         if (!chat) {
           chat = new Chat({
-            participants: [receiver, sender],
+            participants: participants,
             messages: [],
           });
         }
-
         chat.messages.push({ senderID: sender, text });
-
         await chat.save();
       } catch (e) {
         console.log(e.message);
       }
     });
+
+    socket.on(
+      "sendGroupMessage",
+      async ({ participants, sender, senderName, text }) => {
+        const roomID = [...participants].sort().join("$");
+        io.to(roomID).emit("groupMessageReceived", { sender, senderName, text });
+
+        try {
+          let chat = await Chat.findOne({
+            participants: { $all: participants },
+          });
+          if (!chat) {
+            chat = new Chat({
+              participants: participants,
+              messages: [],
+            });
+          }
+          chat.messages.push({ senderID: sender, text });
+          await chat.save();
+        } catch (e) {
+          console.log(e.message);
+        }
+      }
+    );
 
     socket.on("disconnect", () => {});
   });

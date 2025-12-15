@@ -24,6 +24,7 @@ const { profileRouter } = require("./routes/profile.js");
 const { requestRouter } = require("./routes/request.js");
 const { userRouter } = require("./routes/user.js");
 const { chatRouter } = require("./routes/chats.js");
+const { groupRouter } = require("./routes/group.js");
 
 const http = require("http");
 
@@ -36,6 +37,7 @@ app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
 app.use("/", chatRouter);
+app.use("/", groupRouter);
 
 connectDB()
   .then(() => {
